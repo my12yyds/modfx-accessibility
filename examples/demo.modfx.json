@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "mod_id": "examplemod",
+  "mod_version": "1.0.0",
+  "effects": [
+    {
+      "id": "examplemod:quake_camera",
+      "category": "camera_shake",
+      "name": "Quake camera movement",
+      "description": "Brief camera movement while the fictional quake event is active.",
+      "controls": {
+        "disable": true,
+        "intensity": true,
+        "reduced_motion": true,
+        "reduced_flashing": false
+      },
+      "intensity_range": {
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "default": 0.7
+      }
+    },
+    {
+      "id": "examplemod:spell_flash",
+      "category": "screen_flash",
+      "name": "Spell flash",
+      "description": "A short full-screen flash when the fictional spell is cast.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": true
+      }
+    }
+  ]
+}

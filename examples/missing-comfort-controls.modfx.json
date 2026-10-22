@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "mod_id": "examplemod",
+  "mod_version": "1.0.0",
+  "effects": [
+    {
+      "id": "examplemod:hard_shake",
+      "category": "camera_shake",
+      "name": "Hard shake",
+      "description": "A fictional camera shake used to demonstrate the linter warning.",
+      "controls": {
+        "disable": false,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    }
+  ]
+}
