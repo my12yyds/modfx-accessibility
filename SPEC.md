@@ -6,6 +6,8 @@ This document defines the current draft JSON contract. It is intentionally small
 
 A manifest is UTF-8 JSON. The root object contains:
 
+Object member names must be unique at every level. Nonstandard constants such as NaN and Infinity are not JSON and are rejected by the file validator.
+
 | Field | Type | Required | Rule |
 | --- | --- | --- | --- |
 | `schema_version` | integer | yes | Must be `1`. |

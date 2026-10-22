@@ -181,6 +181,19 @@ def _validate_range(value: Any, path: str, issues: list[Issue]) -> None:
             _issue(issues, "error", "intensity_range.default", f"{path}.default", "default must be within the declared minimum and maximum.")
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON member '{key}'.")
+        result[key] = value
+    return result
+
+
+def _reject_constant(value: str) -> None:
+    raise ValueError(f"Non-standard JSON number '{value}' is not allowed.")
+
+
 def validate_file(path: str | Path) -> ValidationReport:
     """Load and validate one manifest, converting file/JSON failures to issues."""
     file_path = Path(path)
@@ -189,7 +202,9 @@ def validate_file(path: str | Path) -> ValidationReport:
     except (OSError, UnicodeError) as exc:
         return ValidationReport((Issue("error", "file.read", str(file_path), str(exc)),))
     try:
-        data = json.loads(text)
+        data = json.loads(text, object_pairs_hook=_unique_object, parse_constant=_reject_constant)
     except json.JSONDecodeError as exc:
         return ValidationReport((Issue("error", "json.parse", f"{file_path}:{exc.lineno}:{exc.colno}", exc.msg),))
+    except (ValueError, RecursionError) as exc:
+        return ValidationReport((Issue("error", "json.parse", str(file_path), str(exc)),))
     return validate_manifest(data)

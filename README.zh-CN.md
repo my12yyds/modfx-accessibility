@@ -37,6 +37,8 @@ modfx-a11y lint examples/demo.modfx.json --format json
 
 ## 批量检查与接入
 
+新增 Markdown 报告：`modfx-a11y lint examples/ --format markdown`，可查看文件汇总与逐条诊断。完整问题代码及修复建议见[排错参考](docs/DIAGNOSTICS.md)。文件解析现会拒绝重复 JSON 字段、NaN 和 Infinity，避免含糊的元数据被静默接受。
+
 现在可以检查多个文件或整个目录；目录会递归查找 `*.modfx.json`：
 
 ```sh

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .validator import ValidationReport, validate_file
 from .template import starter_manifest
+from .reporting import markdown_report
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -16,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     lint = subparsers.add_parser("lint", help="check one JSON manifest")
     lint.add_argument("manifest", nargs="+", help="manifest files or directories (recursively finds *.modfx.json)")
-    lint.add_argument("--format", choices=("text", "json"), default="text", help="output format")
+    lint.add_argument("--format", choices=("text", "json", "markdown"), default="text", help="output format")
     lint.add_argument("--strict", action="store_true", help="return failure when guidance warnings are present")
     init = subparsers.add_parser("init", help="write a conservative starter manifest without overwriting files")
     init.add_argument("output", help="destination JSON file (parent directory must exist)")
@@ -61,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
                 "files": [{"path": path, **report.to_dict()} for path, report in reports],
             }
         print(json.dumps(result, indent=2, ensure_ascii=False))
+    elif args.format == "markdown":
+        print(markdown_report(reports), end="")
     else:
         for path, report in reports:
             _print_report(path, report)

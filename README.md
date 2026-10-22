@@ -67,6 +67,8 @@ The normative field list is in [`SPEC.md`](SPEC.md). A JSON Schema is provided a
 
 ## Current scope
 
+Export a shareable report with `modfx-a11y lint examples/ --format markdown`. See the [diagnostics and troubleshooting reference](docs/DIAGNOSTICS.md) for all issue codes and output details.
+
 See the [integration guide](docs/INTEGRATION.md) for batch validation, JSON report semantics and in-game verification, and the [roadmap](docs/ROADMAP.md) for maintenance priorities.
 
 - JSON manifest format, schema, sample files, and a standard-library Python validator.

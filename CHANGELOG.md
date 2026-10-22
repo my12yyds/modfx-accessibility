@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Render Markdown validation summaries and diagnostic tables with escaped input text.
+- Reject duplicate JSON members and nonstandard NaN/Infinity constants; report parser recursion failures as JSON issues.
+- Document diagnostic codes and troubleshooting; test report escaping and parsing ambiguity.
+
 - Add `init --mod-id` starter generation with exclusive file creation and conservative control declarations.
 - Add a Chinese hands-on tutorial and sourced maintainer community resources.
 
