@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from .validator import ValidationReport, validate_file
+from .template import starter_manifest
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -17,11 +18,24 @@ def build_parser() -> argparse.ArgumentParser:
     lint.add_argument("manifest", nargs="+", help="manifest files or directories (recursively finds *.modfx.json)")
     lint.add_argument("--format", choices=("text", "json"), default="text", help="output format")
     lint.add_argument("--strict", action="store_true", help="return failure when guidance warnings are present")
+    init = subparsers.add_parser("init", help="write a conservative starter manifest without overwriting files")
+    init.add_argument("output", help="destination JSON file (parent directory must exist)")
+    init.add_argument("--mod-id", required=True, help="your mod namespace")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "init":
+        try:
+            data = starter_manifest(args.mod_id)
+            with Path(args.output).open("x", encoding="utf-8") as stream:
+                stream.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        except (ValueError, OSError) as exc:
+            print(f"Cannot create manifest: {exc}", file=sys.stderr)
+            return 1
+        print(f"Created {args.output}. Replace placeholder text and declare only implemented controls.")
+        return 0
     paths = []
     for item in args.manifest:
         path = Path(item)

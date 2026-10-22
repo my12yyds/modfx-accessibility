@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `init --mod-id` starter generation with exclusive file creation and conservative control declarations.
+- Add a Chinese hands-on tutorial and sourced maintainer community resources.
+
 - Accept multiple manifest files and recursively scan directories for `*.modfx.json`.
 - Aggregate batch JSON reports while preserving the single-file output format.
 - Add batch regression tests, integration instructions and maintenance roadmap.

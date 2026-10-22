@@ -10,6 +10,8 @@
 
 ## 开始使用
 
+初次使用可跟随[中文实操教程](docs/TUTORIAL.zh-CN.md)，也可查看维护者的[社区分享资料](docs/COMMUNITY.md)。
+
 需要 Python 3.10 或更新版本，无运行时第三方依赖。在项目目录执行：
 
 ```sh
@@ -19,6 +21,8 @@ modfx-a11y lint examples/demo.modfx.json --format json
 ```
 
 复制示例并修改模组 ID、版本和效果描述。只将实际存在的控制项标为 `true`，发布前在游戏中逐项验证。
+
+也可以执行 `modfx-a11y init mymod.modfx.json --mod-id mymod` 生成草稿。命令不会覆盖现有文件；模板所有控制项默认 `false`，需要根据实际实现填写，因此初始建议警告是预期行为。
 
 | 控制项 | 声明内容 |
 | --- | --- |

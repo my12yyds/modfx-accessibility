@@ -4,6 +4,8 @@ This is a plan, not a statement of completed integrations or adoption.
 
 ## Available
 
+- Conservative starter manifest generation and a Chinese hands-on tutorial.
+
 - Draft manifest v1 and JSON Schema.
 - Dependency-free Python validator with stable issue codes.
 - Single-file and recursive batch validation; text and JSON reports.

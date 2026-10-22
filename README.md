@@ -14,12 +14,22 @@ This project does not change another mod's behavior, inspect game code, or claim
 
 ## Quick start
 
+New to manifests? See the [Chinese hands-on tutorial](docs/TUTORIAL.zh-CN.md) and [community resources](docs/COMMUNITY.md).
+
 Requires Python 3.10 or newer. No runtime dependencies are needed.
 
 ```sh
 python -m pip install -e .
 modfx-a11y lint examples/demo.modfx.json
 ```
+
+Generate a starter manifest without overwriting an existing file:
+
+```sh
+modfx-a11y init mymod.modfx.json --mod-id mymod
+```
+
+The template uses placeholder descriptions and declares every control as false. Edit it to match implemented behavior; its initial guidance warning is intentional.
 
 For a JSON report or to make guidance warnings fail CI:
 
