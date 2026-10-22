@@ -52,6 +52,8 @@ modfx-a11y lint examples/demo.modfx.json examples/missing-comfort-controls.modfx
 
 ## 开发与测试
 
+新增[Python 接入说明](docs/PYTHON_API.md)和[示例目录](examples/README.md)。`examples/all-categories.modfx.json` 覆盖当前全部 8 个效果类别；这些数据仅用于教学与测试。
+
 ```sh
 python -m pip install -e .
 python -m unittest discover -s tests -v

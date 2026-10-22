@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Export the validator and report types from the package root with a documented Python API.
+- Add an eight-category fictional manifest and an example catalog with expected results.
+- Check schema/validator vocabulary alignment and example coverage in regression tests.
+
 - Render Markdown validation summaries and diagnostic tables with escaped input text.
 - Reject duplicate JSON members and nonstandard NaN/Infinity constants; report parser recursion failures as JSON issues.
 - Document diagnostic codes and troubleshooting; test report escaping and parsing ambiguity.

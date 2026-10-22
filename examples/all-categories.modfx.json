@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "mod_id": "categorydemo",
+  "mod_version": "0.1.0",
+  "effects": [
+    {
+      "id": "categorydemo:camera_shake",
+      "category": "camera_shake",
+      "name": "Camera Shake",
+      "description": "Fictional camera_shake example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:camera_zoom",
+      "category": "camera_zoom",
+      "name": "Camera Zoom",
+      "description": "Fictional camera_zoom example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:color_flash",
+      "category": "color_flash",
+      "name": "Color Flash",
+      "description": "Fictional color_flash example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:distortion",
+      "category": "distortion",
+      "name": "Distortion",
+      "description": "Fictional distortion example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:fov_change",
+      "category": "fov_change",
+      "name": "Fov Change",
+      "description": "Fictional fov_change example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:motion_blur",
+      "category": "motion_blur",
+      "name": "Motion Blur",
+      "description": "Fictional motion_blur example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:overlay",
+      "category": "overlay",
+      "name": "Overlay",
+      "description": "Fictional overlay example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    },
+    {
+      "id": "categorydemo:screen_flash",
+      "category": "screen_flash",
+      "name": "Screen Flash",
+      "description": "Fictional screen_flash example for documentation only.",
+      "controls": {
+        "disable": true,
+        "intensity": false,
+        "reduced_motion": false,
+        "reduced_flashing": false
+      }
+    }
+  ]
+}

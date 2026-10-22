@@ -102,4 +102,6 @@ Adoption and usefulness depend on mod authors implementing the controls and publ
 
 ## Contributing
 
+For embedding the validator in your own tools, see the [Python API guide](docs/PYTHON_API.md). The [example catalog](examples/README.md) explains each fixture and expected warnings.
+
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). Feedback on category names, control semantics, and integration examples is especially useful while the format is still a draft.
