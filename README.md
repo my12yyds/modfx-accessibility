@@ -57,6 +57,8 @@ The normative field list is in [`SPEC.md`](SPEC.md). A JSON Schema is provided a
 
 ## Current scope
 
+See the [integration guide](docs/INTEGRATION.md) for batch validation, JSON report semantics and in-game verification, and the [roadmap](docs/ROADMAP.md) for maintenance priorities.
+
 - JSON manifest format, schema, sample files, and a standard-library Python validator.
 - Human-readable and JSON CLI output with stable issue codes.
 - Guidance warnings, not medical, legal, or compliance judgments.
@@ -78,7 +80,7 @@ For Windows PowerShell source-only checks, set `$env:PYTHONPATH = "src"` before 
 1. Gather feedback from mod authors and players; revise the draft categories and control vocabulary.
 2. Add examples and adapters only with agreement from projects that want to integrate.
 3. Consider a small Fabric library after the manifest vocabulary is stable.
-4. Add pack-level reporting once there are multiple real manifests to consume.
+4. Extend the available batch validation with pack-level summaries once real integration feedback is available.
 
 Adoption and usefulness depend on mod authors implementing the controls and publishing manifests. The project is experimental until that happens.
 

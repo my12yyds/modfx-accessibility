@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Accept multiple manifest files and recursively scan directories for `*.modfx.json`.
+- Aggregate batch JSON reports while preserving the single-file output format.
+- Add batch regression tests, integration instructions and maintenance roadmap.
+
 ## 0.1.0 — initial draft
 
 - Draft v1 manifest, JSON Schema and dependency-free Python validator.

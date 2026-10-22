@@ -31,7 +31,20 @@ modfx-a11y lint examples/demo.modfx.json --format json
 
 退出码：`0` 表示无结构错误，`1` 表示输入无效，`2` 表示启用 `--strict` 后因警告失败。JSON 报告包含稳定问题代码、位置、严重程度和说明，方便持续集成读取。
 
-## 开发检查
+## 批量检查与接入
+
+现在可以检查多个文件或整个目录；目录会递归查找 `*.modfx.json`：
+
+```sh
+modfx-a11y lint examples/ --format json
+modfx-a11y lint examples/demo.modfx.json examples/missing-comfort-controls.modfx.json
+```
+
+多文件报告提供总错误数、总警告数和逐文件结果。单文件 JSON 格式保持兼容。任一文件错误返回 1；只有警告时，默认返回 0，严格模式返回 2。空目录返回 1。
+
+详见[接入与人工核对指南](docs/INTEGRATION.md)、[维护路线图](docs/ROADMAP.md)。批量检查已经实现；游戏内适配和真实模组采用仍属于后续工作。
+
+## 开发与测试
 
 ```sh
 python -m pip install -e .
