@@ -63,6 +63,8 @@ The validator suggests at least one declared option in the following set. These 
 
 If none is true, the CLI emits `controls.no_suggested_option`. This is a warning by default, not a claim that a mod is unsafe or non-compliant. `--strict` makes any warning produce exit status 2.
 
+The validator also emits non-normative guidance warnings that never change the contract: an effect name longer than 80 characters, a description longer than 280 characters, two effects sharing a name, placeholder text left over from `modfx-a11y init`, and a `mod_version` that does not look like a version number. Projects that do not want them can set `min_severity` to `error` or disable individual codes in `modfx.config.json`. The full list, including pack-level and configuration codes, is in [docs/DIAGNOSTICS.md](docs/DIAGNOSTICS.md).
+
 ## Compatibility and limitations
 
 IDs and control keys are stable within schema v1. Consumers should ignore an entire manifest version they do not support rather than guessing. This draft has no canonical publication endpoint, loader API, or automatic relationship with in-game options yet.

@@ -15,7 +15,12 @@ class TemplateTests(unittest.TestCase):
         data = starter_manifest("mymod")
         report = validate_manifest(data)
         self.assertTrue(report.ok)
-        self.assertEqual(len(report.warnings), 1)
+        # One guidance warning for the missing control, plus one per placeholder text field.
+        self.assertEqual(len(report.warnings), 3)
+        self.assertEqual(
+            {issue.code for issue in report.warnings},
+            {"controls.no_suggested_option", "effect.placeholder"},
+        )
         self.assertFalse(any(data["effects"][0]["controls"].values()))
 
     def test_invalid_id_does_not_create_file(self):
