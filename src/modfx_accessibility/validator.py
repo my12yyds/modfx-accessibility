@@ -33,6 +33,16 @@ CONTROL_HINTS = {
 }
 CONTROL_FIELDS = ("disable", "intensity", "reduced_motion", "reduced_flashing")
 
+#: Guidance thresholds for free-text fields. They are warnings, never errors.
+NAME_MAX_LENGTH = 80
+DESCRIPTION_MAX_LENGTH = 280
+
+#: Prefix of the placeholder text written by ``modfx-a11y init``.
+PLACEHOLDER_PREFIX = "replace with"
+
+#: Loose version label pattern used by the ``mod_version.format`` warning.
+VERSION_RE = re.compile(r"^\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.\-]+)?$")
+
 
 @dataclass(frozen=True)
 class Issue:
@@ -45,6 +55,9 @@ class Issue:
 @dataclass(frozen=True)
 class ValidationReport:
     issues: tuple[Issue, ...]
+    #: Number of issues removed by a baseline or a severity filter. Defaults to 0 so
+    #: that callers constructing reports directly keep working unchanged.
+    suppressed: int = 0
 
     @property
     def errors(self) -> tuple[Issue, ...]:
@@ -63,8 +76,44 @@ class ValidationReport:
             "ok": self.ok,
             "error_count": len(self.errors),
             "warning_count": len(self.warnings),
+            "suppressed_count": self.suppressed,
             "issues": [asdict(issue) for issue in self.issues],
         }
+
+    def filtered(self, min_severity: str) -> "ValidationReport":
+        """Drop issues below ``min_severity``.
+
+        Args:
+            min_severity: ``warning`` keeps everything, ``error`` keeps errors only.
+
+        Returns:
+            ValidationReport: A new report containing only the surviving issues.
+        """
+        from .rules import severity_rank
+
+        threshold = severity_rank(min_severity)
+        kept = tuple(issue for issue in self.issues if severity_rank(issue.severity) >= threshold)
+        return ValidationReport(kept, suppressed=self.suppressed + len(self.issues) - len(kept))
+
+    def with_issues(self, extra: tuple[Issue, ...]) -> "ValidationReport":
+        """Return a new report with additional issues appended.
+
+        Args:
+            extra: Issues to append after the existing ones.
+
+        Returns:
+            ValidationReport: A new report; the original is unchanged.
+        """
+        return ValidationReport(self.issues + tuple(extra), suppressed=self.suppressed)
+
+    def to_json(self) -> dict[str, Any]:
+        """Alias of :meth:`to_dict` kept for symmetry with the model layer.
+
+        Returns:
+            dict[str, Any]: JSON-compatible report dictionary.
+        """
+        return self.to_dict()
+
 
 
 def _issue(issues: list[Issue], severity: str, code: str, path: str, message: str) -> None:
@@ -96,6 +145,9 @@ def validate_manifest(data: Any) -> ValidationReport:
     mod_version = data.get("mod_version")
     if "mod_version" in data and (not isinstance(mod_version, str) or not mod_version.strip()):
         _issue(issues, "error", "mod_version.type", "$.mod_version", "mod_version must be a non-empty string.")
+    elif isinstance(mod_version, str) and not VERSION_RE.fullmatch(mod_version.strip()):
+        _issue(issues, "warning", "mod_version.format", "$.mod_version",
+               "mod_version does not look like a version number; a label such as 1.2.0 is easier to compare.")
 
     effects = data.get("effects")
     if "effects" in data and not isinstance(effects, list):
@@ -104,6 +156,7 @@ def validate_manifest(data: Any) -> ValidationReport:
         if not effects:
             _issue(issues, "warning", "effects.empty", "$.effects", "No visual effects are declared.")
         seen: set[str] = set()
+        seen_names: dict[str, str] = {}
         for index, effect in enumerate(effects):
             base = f"$.effects[{index}]"
             if not isinstance(effect, dict):
@@ -135,6 +188,8 @@ def validate_manifest(data: Any) -> ValidationReport:
                 if key in effect and (not isinstance(value, str) or not value.strip()):
                     _issue(issues, "error", f"{key}.type", f"{base}.{key}", f"{key} must be a non-empty string.")
 
+            _check_effect_text(effect, base, issues, seen_names)
+
             controls = effect.get("controls")
             if "controls" in effect and not isinstance(controls, dict):
                 _issue(issues, "error", "controls.type", f"{base}.controls", "controls must be an object.")
@@ -158,6 +213,45 @@ def validate_manifest(data: Any) -> ValidationReport:
                 _issue(issues, "error", "intensity_range.required", f"{base}.intensity_range", "Declare intensity_range when intensity control is available.")
 
     return ValidationReport(tuple(issues))
+
+
+def _check_effect_text(effect: dict, base: str, issues: list[Issue], seen_names: dict[str, str]) -> None:
+    """Check free-text quality of one effect: length, duplicates and template text.
+
+    Args:
+        effect: The effect object being validated.
+        base: JSON path prefix of the effect, for example ``$.effects[0]``.
+        issues: Accumulator receiving new issues.
+        seen_names: Map of casefolded names to the effect that used them first.
+
+    Returns:
+        None
+    """
+    name = effect.get("name")
+    if isinstance(name, str) and name.strip():
+        stripped = name.strip()
+        if len(stripped) > NAME_MAX_LENGTH:
+            _issue(issues, "warning", "effect.name.too_long", f"{base}.name",
+                   f"name is {len(stripped)} characters long; keep it at {NAME_MAX_LENGTH} or fewer.")
+        normalized = stripped.casefold()
+        if normalized in seen_names:
+            _issue(issues, "warning", "effect.name.duplicate", f"{base}.name",
+                   f"Another effect already uses the name '{stripped}'.")
+        else:
+            seen_names[normalized] = str(effect.get("id") or base)
+        if normalized.startswith(PLACEHOLDER_PREFIX):
+            _issue(issues, "warning", "effect.placeholder", f"{base}.name",
+                   "name still contains the starter template text.")
+
+    description = effect.get("description")
+    if isinstance(description, str) and description.strip():
+        stripped = description.strip()
+        if len(stripped) > DESCRIPTION_MAX_LENGTH:
+            _issue(issues, "warning", "effect.description.too_long", f"{base}.description",
+                   f"description is {len(stripped)} characters long; keep it at {DESCRIPTION_MAX_LENGTH} or fewer.")
+        if stripped.casefold().startswith(PLACEHOLDER_PREFIX):
+            _issue(issues, "warning", "effect.placeholder", f"{base}.description",
+                   "description still contains the starter template text.")
 
 
 def _validate_range(value: Any, path: str, issues: list[Issue]) -> None:
