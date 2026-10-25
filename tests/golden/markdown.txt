@@ -1,0 +1,19 @@
+# ModFX Accessibility validation report
+
+Files: 3 | Errors: 1 | Warnings: 2
+
+This checks declarations only; it does not verify in-game controls or certify safety.
+
+| File | Structural status | Errors | Warnings |
+| --- | --- | --- | --- |
+| clean.modfx.json | valid | 0 | 0 |
+| warn.modfx.json | valid | 0 | 1 |
+| broken.modfx.json | invalid | 1 | 1 |
+
+## Diagnostics
+
+| File | Severity | Code | Location | Message |
+| --- | --- | --- | --- | --- |
+| warn.modfx.json | warning | effects.empty | $.effects | No effects. |
+| broken.modfx.json | error | control.required | $.effects\[0\].controls.disable | Declare &\#x27;disable&\#x27;. |
+| broken.modfx.json | warning | controls.no\_suggested\_option | $.effects\[0\].controls | Consider an option. |

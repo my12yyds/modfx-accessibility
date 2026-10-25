@@ -1,0 +1,53 @@
+{
+  "ok": false,
+  "file_count": 3,
+  "error_count": 1,
+  "warning_count": 2,
+  "suppressed_count": 1,
+  "files": [
+    {
+      "path": "clean.modfx.json",
+      "ok": true,
+      "error_count": 0,
+      "warning_count": 0,
+      "suppressed_count": 0,
+      "issues": []
+    },
+    {
+      "path": "warn.modfx.json",
+      "ok": true,
+      "error_count": 0,
+      "warning_count": 1,
+      "suppressed_count": 0,
+      "issues": [
+        {
+          "severity": "warning",
+          "code": "effects.empty",
+          "path": "$.effects",
+          "message": "No effects."
+        }
+      ]
+    },
+    {
+      "path": "broken.modfx.json",
+      "ok": false,
+      "error_count": 1,
+      "warning_count": 1,
+      "suppressed_count": 1,
+      "issues": [
+        {
+          "severity": "error",
+          "code": "control.required",
+          "path": "$.effects[0].controls.disable",
+          "message": "Declare 'disable'."
+        },
+        {
+          "severity": "warning",
+          "code": "controls.no_suggested_option",
+          "path": "$.effects[0].controls",
+          "message": "Consider an option."
+        }
+      ]
+    }
+  ]
+}

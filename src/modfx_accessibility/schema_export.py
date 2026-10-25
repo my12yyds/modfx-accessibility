@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from .validator import CONTROL_FIELDS, EFFECT_ID_RE, MOD_ID_RE, VALID_CATEGORIES
+from .validator import CONTROL_FIELDS, EFFECT_ID_RE, MOD_ID_RE, RESERVED_NAMESPACES, VALID_CATEGORIES
 
 SCHEMA_TITLE = "ModFX Accessibility Manifest v1 (draft)"
 SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
@@ -34,7 +34,11 @@ def build_schema() -> dict[str, Any]:
         "required": ["schema_version", "mod_id", "mod_version", "effects"],
         "properties": {
             "schema_version": {"const": 1},
-            "mod_id": {"type": "string", "pattern": MOD_ID_RE.pattern},
+            "mod_id": {
+                "type": "string",
+                "pattern": MOD_ID_RE.pattern,
+                "not": {"enum": sorted(RESERVED_NAMESPACES)},
+            },
             "mod_version": {"type": "string", "minLength": 1},
             "effects": {"type": "array", "items": {"$ref": "#/$defs/effect"}},
         },

@@ -11,11 +11,15 @@ Object member names must be unique at every level. Nonstandard constants such as
 | Field | Type | Required | Rule |
 | --- | --- | --- | --- |
 | `schema_version` | integer | yes | Must be `1`. |
-| `mod_id` | string | yes | Lowercase mod ID: letters, digits, `_`, `-`; starts with a letter. |
+| `mod_id` | string | yes | Lowercase mod ID: letters, digits, `_`, `-`; starts with a letter. Must not use a reserved namespace. |
 | `mod_version` | string | yes | Non-empty version label from the mod. |
 | `effects` | array | yes | Effect declarations. An empty array is allowed but warned on. |
 
 Unknown fields are errors in v1 so misspellings are visible. A later schema version can add fields without changing v1 behavior.
+
+### Reserved namespaces
+
+`mod_id` must not be one of the namespaces that already belong to the game or a loader: `minecraft`, `forge`, `fabric`, `neoforge`, `quilt`, `bukkit`, `spigot`, `paper`, `modfx`. Because every effect id must use `mod_id` as its namespace, reusing one of these would produce identifiers that are indistinguishable from the real ones. This is an error, not a warning.
 
 ## Effect object
 

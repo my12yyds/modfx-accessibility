@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="modfx-a11y" tests="4" failures="1" errors="0">
+  <testsuite name="clean.modfx.json" tests="1" failures="0" errors="0">
+    <testcase classname="clean.modfx.json" name="structure"/>
+  </testsuite>
+  <testsuite name="warn.modfx.json" tests="1" failures="0" errors="0">
+    <testcase classname="warn.modfx.json" name="effects.empty at $.effects"><system-out>effects.empty $.effects: No effects.</system-out></testcase>
+  </testsuite>
+  <testsuite name="broken.modfx.json" tests="2" failures="1" errors="0">
+    <testcase classname="broken.modfx.json" name="control.required at $.effects[0].controls.disable"><failure type="error" message="Declare 'disable'.">$.effects[0].controls.disable: Declare 'disable'.</failure></testcase>
+    <testcase classname="broken.modfx.json" name="controls.no_suggested_option at $.effects[0].controls"><system-out>controls.no_suggested_option $.effects[0].controls: Consider an option.</system-out></testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "modfx-a11y",
+          "version": "0.0.0-golden",
+          "informationUri": "https://github.com/my12yyds/modfx-accessibility",
+          "rules": [
+            {
+              "id": "effects.empty",
+              "name": "effects.empty",
+              "shortDescription": {
+                "text": "No effects declared"
+              },
+              "fullDescription": {
+                "text": "The manifest declares no effects. Confirm this is intentional before publishing."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "The manifest declares no effects. Confirm this is intentional before publishing."
+              },
+              "properties": {
+                "group": "structure",
+                "fixable": false
+              }
+            },
+            {
+              "id": "control.required",
+              "name": "control.required",
+              "shortDescription": {
+                "text": "Control declaration is missing"
+              },
+              "fullDescription": {
+                "text": "Every control must be declared explicitly as true or false. Omitting a control is ambiguous."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "help": {
+                "text": "Every control must be declared explicitly as true or false. Omitting a control is ambiguous."
+              },
+              "properties": {
+                "group": "structure",
+                "fixable": false
+              }
+            },
+            {
+              "id": "controls.no_suggested_option",
+              "name": "controls.no_suggested_option",
+              "shortDescription": {
+                "text": "No suggested option is declared"
+              },
+              "fullDescription": {
+                "text": "None of the options suggested for this category is declared. Implement a suitable option if feasible; never claim an option that does not exist."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "help": {
+                "text": "None of the options suggested for this category is declared. Implement a suitable option if feasible; never claim an option that does not exist."
+              },
+              "properties": {
+                "group": "structure",
+                "fixable": false
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "effects.empty",
+          "level": "warning",
+          "message": {
+            "text": "No effects."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "warn.modfx.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "fullyQualifiedName": "$.effects",
+                  "kind": "member"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "control.required",
+          "level": "error",
+          "message": {
+            "text": "Declare 'disable'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "broken.modfx.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "fullyQualifiedName": "$.effects[0].controls.disable",
+                  "kind": "member"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "ruleId": "controls.no_suggested_option",
+          "level": "warning",
+          "message": {
+            "text": "Consider an option."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "broken.modfx.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "fullyQualifiedName": "$.effects[0].controls",
+                  "kind": "member"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

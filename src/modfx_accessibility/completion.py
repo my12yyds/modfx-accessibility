@@ -24,6 +24,8 @@ COMMANDS: dict[str, tuple[str, ...]] = {
     "schema": ("--output",),
     "completion": (),
     "doctor": ("--json", "--config", "--no-config"),
+    "baseline": ("--format", "--dry-run", "--config", "--no-config", "--exclude"),
+    "index": ("--pack-id", "--pack-version", "--output", "--format", "--config", "--no-config", "--exclude"),
 }
 
 SHELLS: tuple[str, ...] = ("bash", "zsh", "fish")
@@ -31,6 +33,7 @@ SHELLS: tuple[str, ...] = ("bash", "zsh", "fish")
 _VALUE_OPTIONS = {
     "--format", "--fail-on", "--min-severity", "--baseline", "--baseline-write", "--config",
     "--exclude", "--output", "--mod-id", "--template", "--category", "--group",
+    "--pack-id", "--pack-version",
 }
 
 

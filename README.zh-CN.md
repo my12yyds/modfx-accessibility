@@ -1,12 +1,12 @@
 # ModFX Accessibility
 
-[English](README.md) · [清单规范](SPEC.md) · [命令行手册](docs/CLI.md) · [配置说明](docs/CONFIGURATION.md) · [参与贡献](CONTRIBUTING.md)
+[English](README.md) · [清单规范](SPEC.md) · [词汇表](docs/VOCABULARY.md) · [命令行手册](docs/CLI.md) · [配置说明](docs/CONFIGURATION.md) · [架构说明](docs/ARCHITECTURE.md) · [参与贡献](CONTRIBUTING.md)
 
 让 Minecraft 模组的视觉效果控制选项更容易被发现、描述和检查。
 
 玩家可能需要关闭镜头晃动、降低视觉强度或减少闪烁。这个项目提出一个小型 JSON 清单，让模组作者统一声明自己已经实现的控制选项，并通过命令行工具在本地、CI 或自己的脚本中校验这些声明。
 
-项目目前为 **v0.2.0 早期草案**，采用 MIT 许可证，由 [my12yyds](https://github.com/my12yyds) 维护。示例均为虚构数据，尚不代表任何已发布模组接入。它不会自动修改其他模组，也不提供游戏内运行时集成。
+项目目前为 **v0.3.0 早期草案**，采用 MIT 许可证，由 [my12yyds](https://github.com/my12yyds) 维护。示例均为虚构数据，尚不代表任何已发布模组接入。它不会自动修改其他模组，也不提供游戏内运行时集成。
 
 ## 开始使用
 
@@ -76,10 +76,24 @@ modfx-a11y fmt manifests/ --check
 ### 看清覆盖率与版本差异
 
 ```sh
-modfx-a11y stats examples/ --format markdown     # 各类别控制项覆盖率
+modfx-a11y stats examples/ --format markdown     # 覆盖率 + 类别×控件矩阵 + 缺口清单
+modfx-a11y stats examples/ --format html         # 独立看板
 modfx-a11y diff old.modfx.json new.modfx.json    # 两个版本之间改了什么
 modfx-a11y pack manifests/                       # 跨文件重复 mod_id / 效果 ID
+modfx-a11y index build manifests/ --pack-id mypack   # 生成带来源信息的清单索引
+modfx-a11y index check modfx-pack.json               # 索引是否仍与实际文件一致
 ```
+
+`stats` 会给出类别分布、类别×控件矩阵、每个模组的效果数量，以及「一个控件都没声明」的效果清单——后者才是维护者真正要动手的地方。
+
+### 让基线保持健康
+
+```sh
+modfx-a11y baseline show .modfx-baseline.json
+modfx-a11y baseline prune .modfx-baseline.json --manifest manifests/ --dry-run
+```
+
+`prune` 会删掉已经不再匹配任何问题的条目，让基线随着问题修复逐步收缩，而不是慢慢腐烂。
 
 ### 查询词汇表
 
@@ -108,6 +122,20 @@ modfx-a11y doctor                # 环境与项目结构自检
 
 配置会从当前工作目录向上查找。配置写错会直接报错，而不是悄悄停用某条检查。详见[配置说明](docs/CONFIGURATION.md)。
 
+一个项目往往不是「一种策略打天下」。`overrides` 可以按目录应用不同策略，这也是在已有警告的仓库里平滑接入的办法：
+
+```json
+{
+  "schema_version": 1,
+  "fail_on": "error",
+  "overrides": [
+    {"files": ["legacy/**"], "disabled_rules": ["controls.no_suggested_option"], "fail_on": "none"}
+  ]
+}
+```
+
+覆盖是**叠加**的：可以多禁用规则、调整严重级，但不能把基础配置里已禁用的规则重新打开。
+
 ## 退出码
 
 | 退出码 | 含义 |
@@ -121,11 +149,34 @@ modfx-a11y doctor                # 环境与项目结构自检
 ## 当前边界
 
 - 已有：清单格式、由代码生成的 JSON Schema、示例、零依赖校验器。
-- 已有：11 个子命令、8 种报告格式、项目配置、基线、安全自动修复、整合包跨文件检查。
+- 已有：13 个子命令、8 种报告格式、分目录配置、带维护命令的基线、安全自动修复、整合包跨文件检查与索引校验。
+- 已有：复合 GitHub Action 与 pre-commit 钩子，接入只需几行 YAML。
 - 建议性警告不等于医学、法律或无障碍合规判定。
 - 尚未提供 Fabric/Forge/NeoForge 运行时 API，也不会自动控制第三方模组。
 
-完整问题代码见[排错参考](docs/DIAGNOSTICS.md)，接入方式见[接入指南](docs/INTEGRATION.md)，后续计划见[路线图](docs/ROADMAP.md)。
+完整问题代码见[排错参考](docs/DIAGNOSTICS.md)，词汇表设计理由见[词汇表](docs/VOCABULARY.md)，接入方式见[接入指南](docs/INTEGRATION.md)，模块划分见[架构说明](docs/ARCHITECTURE.md)，后续计划见[路线图](docs/ROADMAP.md)。
+
+## 在 CI 中使用
+
+作为已有 workflow 的一步：
+
+```yaml
+- uses: my12yyds/modfx-accessibility@main
+  with:
+    paths: manifests/
+    args: --strict
+```
+
+配合 [pre-commit](https://pre-commit.com)：
+
+```yaml
+repos:
+  - repo: https://github.com/my12yyds/modfx-accessibility
+    rev: v0.3.0
+    hooks:
+      - id: modfx-a11y-lint
+      - id: modfx-a11y-fmt
+```
 
 ## 开发与测试
 

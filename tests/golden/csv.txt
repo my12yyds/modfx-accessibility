@@ -1,0 +1,4 @@
+file,severity,code,path,message
+warn.modfx.json,warning,effects.empty,$.effects,No effects.
+broken.modfx.json,error,control.required,$.effects[0].controls.disable,Declare 'disable'.
+broken.modfx.json,warning,controls.no_suggested_option,$.effects[0].controls,Consider an option.

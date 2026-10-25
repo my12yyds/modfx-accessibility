@@ -33,6 +33,12 @@ CONTROL_HINTS = {
 }
 CONTROL_FIELDS = ("disable", "intensity", "reduced_motion", "reduced_flashing")
 
+#: Namespaces that already belong to the game or a loader. An effect id in one of these is
+#: indistinguishable from the real thing, so they are rejected as mod ids.
+RESERVED_NAMESPACES = frozenset({
+    "minecraft", "forge", "fabric", "neoforge", "quilt", "bukkit", "spigot", "paper", "modfx",
+})
+
 #: Guidance thresholds for free-text fields. They are warnings, never errors.
 NAME_MAX_LENGTH = 80
 DESCRIPTION_MAX_LENGTH = 280
@@ -141,6 +147,9 @@ def validate_manifest(data: Any) -> ValidationReport:
     mod_id = data.get("mod_id")
     if "mod_id" in data and (not isinstance(mod_id, str) or not MOD_ID_RE.fullmatch(mod_id)):
         _issue(issues, "error", "mod_id.format", "$.mod_id", "mod_id must be lowercase and use only letters, digits, '_' or '-'.")
+    elif isinstance(mod_id, str) and mod_id in RESERVED_NAMESPACES:
+        _issue(issues, "error", "mod_id.reserved", "$.mod_id",
+               f"'{mod_id}' is a reserved namespace; choose a namespace unique to your mod.")
 
     mod_version = data.get("mod_version")
     if "mod_version" in data and (not isinstance(mod_version, str) or not mod_version.strip()):
@@ -271,6 +280,9 @@ def _validate_range(value: Any, path: str, issues: list[Issue]) -> None:
     if all(key in value and isinstance(value[key], (int, float)) and not isinstance(value[key], bool) for key in expected):
         if value["minimum"] > value["maximum"]:
             _issue(issues, "error", "intensity_range.order", path, "minimum must not exceed maximum.")
+        elif value["minimum"] == value["maximum"]:
+            _issue(issues, "warning", "intensity_range.degenerate", path,
+                   "minimum equals maximum, so the intensity control cannot change anything.")
         if not value["minimum"] <= value["default"] <= value["maximum"]:
             _issue(issues, "error", "intensity_range.default", f"{path}.default", "default must be within the declared minimum and maximum.")
 
