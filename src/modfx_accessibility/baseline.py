@@ -185,6 +185,39 @@ class Baseline:
         file_path.write_text(json.dumps(self.to_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         return file_path
 
+    def split(
+        self,
+        reports: Sequence[tuple[str, ValidationReport]],
+    ) -> tuple["Baseline", tuple[BaselineEntry, ...]]:
+        """Split the baseline into entries that still match and entries that do not.
+
+        Args:
+            reports: ``(path, report)`` pairs to match against.
+
+        Returns:
+            tuple[Baseline, tuple[BaselineEntry, ...]]: A baseline holding only the
+            entries that still match something, and the entries that matched nothing.
+            Entries are consumed in order, so duplicate keys keep their first occurrence.
+        """
+        original = Counter(entry.key() for entry in self.entries)
+        remaining = Counter(original)
+        for path, report in reports:
+            for issue in report.issues:
+                key = (_normalize(path), issue.code, issue.path)
+                if remaining[key] > 0:
+                    remaining[key] -= 1
+        budget = {key: original[key] - remaining[key] for key in original}
+        kept: list[BaselineEntry] = []
+        stale: list[BaselineEntry] = []
+        for entry in self.entries:
+            key = entry.key()
+            if budget.get(key, 0) > 0:
+                budget[key] -= 1
+                kept.append(entry)
+            else:
+                stale.append(entry)
+        return Baseline(tuple(kept)), tuple(stale)
+
     def apply(
         self,
         reports: Sequence[tuple[str, ValidationReport]],
@@ -198,7 +231,8 @@ class Baseline:
             tuple[list[tuple[str, ValidationReport]], int]: The filtered reports and the
             number of baseline entries that matched nothing (stale entries).
         """
-        remaining = Counter(entry.key() for entry in self.entries)
+        kept_baseline, stale = self.split(reports)
+        remaining = Counter(entry.key() for entry in kept_baseline.entries)
         results: list[tuple[str, ValidationReport]] = []
         for path, report in reports:
             kept: list[Issue] = []
@@ -211,5 +245,15 @@ class Baseline:
                     continue
                 kept.append(issue)
             results.append((path, ValidationReport(tuple(kept), suppressed=report.suppressed + suppressed)))
-        stale = sum(remaining.values())
-        return results, stale
+        return results, len(stale)
+
+    def summary(self) -> dict[str, int]:
+        """Count entries per diagnostic code.
+
+        Returns:
+            dict[str, int]: Code mapped to the number of accepted occurrences.
+        """
+        counts: dict[str, int] = {}
+        for entry in self.entries:
+            counts[entry.code] = counts.get(entry.code, 0) + 1
+        return dict(sorted(counts.items()))

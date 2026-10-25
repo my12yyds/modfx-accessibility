@@ -3,53 +3,159 @@
   "title": "ModFX Accessibility Manifest v1 (draft)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "mod_id", "mod_version", "effects"],
+  "required": [
+    "schema_version",
+    "mod_id",
+    "mod_version",
+    "effects"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "mod_id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$"},
-    "mod_version": {"type": "string", "minLength": 1},
+    "schema_version": {
+      "const": 1
+    },
+    "mod_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+      "not": {
+        "enum": [
+          "bukkit",
+          "fabric",
+          "forge",
+          "minecraft",
+          "modfx",
+          "neoforge",
+          "paper",
+          "quilt",
+          "spigot"
+        ]
+      }
+    },
+    "mod_version": {
+      "type": "string",
+      "minLength": 1
+    },
     "effects": {
       "type": "array",
-      "items": {"$ref": "#/$defs/effect"}
+      "items": {
+        "$ref": "#/$defs/effect"
+      }
     }
   },
   "$defs": {
     "effect": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "category", "name", "description", "controls"],
+      "required": [
+        "id",
+        "category",
+        "name",
+        "description",
+        "controls"
+      ],
       "properties": {
-        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}:[a-z][a-z0-9_./-]{0,127}$"},
-        "category": {"enum": ["camera_shake", "camera_zoom", "color_flash", "distortion", "fov_change", "motion_blur", "overlay", "screen_flash"]},
-        "name": {"type": "string", "minLength": 1},
-        "description": {"type": "string", "minLength": 1},
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}:[a-z][a-z0-9_./-]{0,127}$"
+        },
+        "category": {
+          "enum": [
+            "camera_shake",
+            "camera_zoom",
+            "color_flash",
+            "distortion",
+            "fov_change",
+            "motion_blur",
+            "overlay",
+            "screen_flash"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
         "controls": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["disable", "intensity", "reduced_motion", "reduced_flashing"],
+          "required": [
+            "disable",
+            "intensity",
+            "reduced_motion",
+            "reduced_flashing"
+          ],
           "properties": {
-            "disable": {"type": "boolean"},
-            "intensity": {"type": "boolean"},
-            "reduced_motion": {"type": "boolean"},
-            "reduced_flashing": {"type": "boolean"}
+            "disable": {
+              "type": "boolean"
+            },
+            "intensity": {
+              "type": "boolean"
+            },
+            "reduced_motion": {
+              "type": "boolean"
+            },
+            "reduced_flashing": {
+              "type": "boolean"
+            }
           }
         },
         "intensity_range": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["minimum", "maximum", "default"],
+          "required": [
+            "minimum",
+            "maximum",
+            "default"
+          ],
           "properties": {
-            "minimum": {"type": "number", "minimum": 0, "maximum": 1},
-            "maximum": {"type": "number", "minimum": 0, "maximum": 1},
-            "default": {"type": "number", "minimum": 0, "maximum": 1}
+            "minimum": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "maximum": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "default": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
           }
         }
       },
       "allOf": [
         {
-          "if": {"properties": {"controls": {"properties": {"intensity": {"const": true}}}}, "required": ["controls"]},
-          "then": {"required": ["intensity_range"]},
-          "else": {"not": {"required": ["intensity_range"]}}
+          "if": {
+            "properties": {
+              "controls": {
+                "properties": {
+                  "intensity": {
+                    "const": true
+                  }
+                }
+              }
+            },
+            "required": [
+              "controls"
+            ]
+          },
+          "then": {
+            "required": [
+              "intensity_range"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "intensity_range"
+              ]
+            }
+          }
         }
       ]
     }

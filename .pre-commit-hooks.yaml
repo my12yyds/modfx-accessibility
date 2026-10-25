@@ -1,0 +1,28 @@
+# Hooks for https://pre-commit.com
+#
+#   repos:
+#     - repo: https://github.com/my12yyds/modfx-accessibility
+#       rev: v0.3.0
+#       hooks:
+#         - id: modfx-a11y-lint
+#         - id: modfx-a11y-fmt
+#
+# Both hooks only receive the staged files that match `*.modfx.json`.
+
+- id: modfx-a11y-lint
+  name: modfx-a11y lint
+  description: Validate ModFX Accessibility manifests
+  entry: modfx-a11y lint
+  language: python
+  files: '\.modfx\.json$'
+  pass_filenames: true
+  require_serial: true
+
+- id: modfx-a11y-fmt
+  name: modfx-a11y fmt
+  description: Rewrite manifests in canonical form
+  entry: modfx-a11y fmt
+  language: python
+  files: '\.modfx\.json$'
+  pass_filenames: true
+  require_serial: true

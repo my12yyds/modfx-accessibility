@@ -142,6 +142,23 @@ filtered, stale = loaded.apply([("mymod.modfx.json", report)])
 
 `apply` returns the filtered reports plus the number of baseline entries that matched nothing. Matching is by `(file, code, path)` and is counted, so a second occurrence of a known issue is still reported.
 
+`split(reports)` returns the same information as a pair: a `Baseline` holding only the entries that still match, and a tuple of stale entries. That is what `baseline prune` uses, and it is the method to call from your own maintenance tooling. `summary()` returns a `{code: count}` mapping for reporting.
+
+## Pack index
+
+```python
+from modfx_accessibility.packindex import PackIndex, build_index, check_index_file
+
+index = build_index("manifests/", pack_id="examplepack", pack_version="1.0.0")
+index.save("modfx-pack.json")
+
+reports = check_index_file("modfx-pack.json")
+reports[0][0]              # the index file itself
+reports[1:]                # one entry per referenced manifest
+```
+
+`build_index` writes entry paths relative to `relative_to` (default: the scanned directory), which should be the directory the index will live in, because `check_index_file` resolves paths against it. `check_index_file` reports structural problems against the index file and manifest problems against each manifest, so the usual renderers work unchanged.
+
 ## Compare and summarise
 
 ```python
@@ -154,8 +171,12 @@ for change in difference.changed:
     print(change.effect_id, change.field, change.before, change.after)
 
 stats, reports = collect(["manifests/a.modfx.json", "manifests/b.modfx.json"])
-stats.control_coverage("disable")
+stats.control_coverage("disable")        # 0.0 .. 1.0
+stats.control_by_category                # {"camera_shake": {"disable": 2, ...}}
+stats.per_mod                            # {"mymod": 3, "othermod": 1}
+stats.effects_without_controls           # ("mymod:ambient", ...)
 stats.to_markdown()
+stats.to_html()                          # standalone dashboard
 ```
 
 `diff_manifests` accepts paths or already-parsed objects and raises `ValueError` when a file cannot be read.

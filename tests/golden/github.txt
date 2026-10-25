@@ -1,0 +1,4 @@
+::warning file=warn.modfx.json,title=effects.empty::$.effects: No effects.
+::error file=broken.modfx.json,title=control.required::$.effects[0].controls.disable: Declare 'disable'.
+::warning file=broken.modfx.json,title=controls.no_suggested_option::$.effects[0].controls: Consider an option.
+modfx-a11y: 3 file(s), 1 error(s), 2 warning(s)

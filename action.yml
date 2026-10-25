@@ -1,0 +1,49 @@
+name: "ModFX Accessibility"
+description: "Validate ModFX Accessibility manifests for Minecraft mod visual effects"
+author: "my12yyds"
+
+branding:
+  icon: "eye"
+  color: "purple"
+
+inputs:
+  paths:
+    description: "Manifest files or directories to validate."
+    required: false
+    default: "."
+  args:
+    description: "Extra arguments passed to 'modfx-a11y lint', for example '--strict' or '--format sarif --output modfx.sarif'."
+    required: false
+    default: ""
+  python-version:
+    description: "Python version used to run the validator."
+    required: false
+    default: "3.12"
+
+outputs:
+  exit-code:
+    description: "Exit code of the lint run: 0 clean, 1 errors, 2 warnings failed the policy."
+    value: ${{ steps.lint.outputs.exit-code }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install modfx-a11y
+      shell: bash
+      run: python -m pip install --quiet --disable-pip-version-check "${{ github.action_path }}"
+
+    - name: Validate manifests
+      id: lint
+      shell: bash
+      # `|| status=$?` keeps the exit code available for the output without
+      # swallowing the failure: the step still fails, CI still goes red.
+      run: |
+        status=0
+        modfx-a11y lint ${{ inputs.paths }} ${{ inputs.args }} || status=$?
+        echo "exit-code=$status" >> "$GITHUB_OUTPUT"
+        exit "$status"

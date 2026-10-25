@@ -1,5 +1,72 @@
 # Changelog
 
+## 0.3.0 — depth release
+
+Everything from 0.2.0 still works. Two behaviour changes are listed at the end.
+
+### Configuration
+
+- `overrides` applies a different policy to a subtree: `files` globs plus `disabled_rules`,
+  `severity_overrides`, `min_severity` and `fail_on`. Overrides are additive — they can disable
+  more rules but cannot re-enable one the base configuration disabled.
+- `ProjectConfig.for_path()` resolves the policy for one file; `apply(report, path)` uses it.
+- Exit codes now honour per-path `fail_on`, so an override with `fail_on: none` really does not
+  fail the run.
+
+### Baselines
+
+- New `baseline` command with `show`, `prune` and `update`, all supporting `--dry-run`.
+- `Baseline.split()` returns the entries that still match plus the stale ones, and
+  `Baseline.summary()` counts accepted diagnostics per code.
+
+### Pack index
+
+- New `modfx-pack.json` format and `packindex` module: a curated list of manifests with optional
+  `mod_id`, `mod_version` and `source` provenance.
+- New `index build` and `index check` commands. `check` validates the index structure, path
+  traversal, source URL schemes, duplicate paths, duplicate mod ids, and that every referenced
+  manifest exists and agrees with the declared version.
+- New codes `pack.index.invalid` and `pack.index.mismatch`.
+
+### Statistics
+
+- `stats` gained a category-by-control matrix, effects per mod, and the list of effects that
+  declare no control at all.
+- `stats --format html` renders a standalone coverage dashboard with bar charts.
+- `Statistics` gained `control_by_category`, `per_mod`, `effects_without_controls`,
+  `intensity_range_coverage`, `categories_in_use` and `to_html()`.
+
+### Validation
+
+- New error `mod_id.reserved`: `minecraft`, `forge`, `fabric`, `neoforge`, `quilt`, `bukkit`,
+  `spigot`, `paper` and `modfx` are rejected as mod ids, because an effect id in one of those
+  namespaces is indistinguishable from the real thing. Documented in SPEC.md and encoded in the
+  generated JSON Schema as `not: {enum: [...]}`.
+- New warning `intensity_range.degenerate`: `minimum == maximum` means the intensity control
+  cannot change anything.
+
+### Integration
+
+- `action.yml`: a composite GitHub Action with `paths`, `args` and `python-version` inputs and an
+  `exit-code` output.
+- `.pre-commit-hooks.yaml`: `modfx-a11y-lint` and `modfx-a11y-fmt`.
+
+### Documentation
+
+- New [architecture notes](docs/ARCHITECTURE.md) covering the module map, data flow, invariants
+  and where to add rules, formats and commands.
+- New [vocabulary rationale](docs/VOCABULARY.md) explaining each category and control, how to
+  choose a category, and three worked examples.
+- Expanded CLI, configuration, diagnostics and Python API references.
+
+### Behaviour changes
+
+- A manifest whose `mod_id` is a reserved namespace is now an **error**. Such a manifest was
+  already ambiguous; the previous behaviour accepted it silently.
+- `init` templates and any manifest with a degenerate intensity range now produce an extra
+  warning. Both are warnings, so nothing that used to pass now fails unless the project opted
+  into `--fail-on warning`.
+
 ## 0.2.0 — toolchain release
 
 Everything from 0.1.0 still works: the manifest contract, the issue codes, the `lint` and `init`

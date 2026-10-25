@@ -95,6 +95,56 @@ SARIF results use logical locations (the JSON path) rather than line numbers, so
   run: modfx-a11y lint manifests/ --format markdown >> "$GITHUB_STEP_SUMMARY"
 ```
 
+### Composite action
+
+If you would rather not wire up Python yourself, the repository ships a composite action:
+
+```yaml
+- uses: my12yyds/modfx-accessibility@main
+  with:
+    paths: manifests/
+    args: --strict
+    python-version: "3.12"
+```
+
+It installs the package from the action checkout, runs `lint`, and exposes the result as the
+`exit-code` output. The step still fails when the lint fails, so a later step can inspect the code
+without the build going green.
+
+### Pack index in CI
+
+When a pack ships a curated list, check the list rather than the directory:
+
+```yaml
+- run: modfx-a11y index check modfx-pack.json --strict
+```
+
+That proves every referenced manifest still exists and still declares the `mod_id` and
+`mod_version` the index claims, which is the failure mode a plain directory scan cannot see.
+
+### Baseline drift
+
+```yaml
+- run: modfx-a11y baseline prune .modfx-baseline.json --manifest manifests/ --dry-run
+```
+
+`--dry-run` reports how many entries are stale without writing. Use it as a reminder to shrink the
+baseline, or drop `--dry-run` in a scheduled job that opens a pull request.
+
+## pre-commit
+
+```yaml
+repos:
+  - repo: https://github.com/my12yyds/modfx-accessibility
+    rev: v0.3.0
+    hooks:
+      - id: modfx-a11y-lint
+      - id: modfx-a11y-fmt
+```
+
+Both hooks receive only the staged `*.modfx.json` files. `modfx-a11y-fmt` rewrites them, which
+pre-commit reports as a failure so you can re-stage the result.
+
 ## Other CI systems
 
 JUnit XML works with most test reporters:

@@ -20,6 +20,7 @@ Every code is registered in `modfx_accessibility.rules`. List them with `modfx-a
 | `field.unknown` | Remove the unknown field or correct its spelling. |
 | `schema.version` | Use integer `1`; booleans and other versions are rejected. |
 | `mod_id.format` | Use a valid lowercase mod ID of at most 64 characters. |
+| `mod_id.reserved` | `mod_id` collides with a namespace that belongs to the game or a loader (`minecraft`, `forge`, `fabric`, `neoforge`, `quilt`, `bukkit`, `spigot`, `paper`, `modfx`). Pick your own namespace. |
 | `mod_version.type` | Supply a nonblank version string. |
 | `mod_version.format` | Warning: the version label does not look like a version number. Free-form labels are allowed, but `1.2.0` makes manifests easier to compare. |
 | `effects.type` | Use an array of effect objects. |
@@ -60,6 +61,7 @@ Every code is registered in `modfx_accessibility.rules`. List them with `modfx-a
 | `intensity_range.bounds` | All range values must lie between 0 and 1 inclusive. |
 | `intensity_range.order` | Minimum must not exceed maximum. |
 | `intensity_range.default` | Default must lie within minimum and maximum. |
+| `intensity_range.degenerate` | Warning: `minimum` equals `maximum`, so the intensity control cannot actually change anything. Widen the range or declare `controls.intensity` as false. |
 
 ## Pack level
 
@@ -69,6 +71,8 @@ These codes are only produced by `modfx-a11y pack` and by `modfx_accessibility.p
 | --- | --- |
 | `pack.duplicate_mod_id` | Two manifests in the same pack declare the same `mod_id`. Keep one manifest per mod. |
 | `pack.duplicate_effect_id` | The same effect id appears in more than one manifest of the pack. |
+| `pack.index.invalid` | A `modfx-pack.json` index is malformed: missing fields, duplicate paths, a path that escapes the pack root, or a `source` URL that is not HTTP(S). |
+| `pack.index.mismatch` | A manifest referenced by the index is missing, or its `mod_id` / `mod_version` does not match what the index declares. |
 
 ## Configuration
 

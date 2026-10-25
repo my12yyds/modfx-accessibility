@@ -17,7 +17,7 @@ from modfx_accessibility.validator import validate_manifest
 #: Every code the validator can emit must appear here and in the registry.
 EXPECTED_CODES = {
     "file.read", "json.parse", "root.type", "field.required", "field.unknown",
-    "schema.version", "mod_id.format", "mod_version.type", "mod_version.format",
+    "schema.version", "mod_id.format", "mod_id.reserved", "mod_version.type", "mod_version.format",
     "effects.type", "effects.empty", "effect.type", "effect_id.format",
     "effect_id.duplicate", "effect_id.namespace", "category.unknown", "name.type",
     "description.type", "effect.name.too_long", "effect.description.too_long",
@@ -25,8 +25,9 @@ EXPECTED_CODES = {
     "control.type", "controls.no_suggested_option", "intensity_range.type",
     "intensity_range.required", "intensity_range.unused", "intensity_range.number",
     "intensity_range.bounds", "intensity_range.order", "intensity_range.default",
-    "pack.duplicate_mod_id", "pack.duplicate_effect_id", "config.invalid",
-    "config.unknown_rule", "baseline.invalid",
+    "intensity_range.degenerate", "pack.duplicate_mod_id", "pack.duplicate_effect_id",
+    "pack.index.invalid", "pack.index.mismatch", "config.invalid", "config.unknown_rule",
+    "baseline.invalid",
 }
 
 

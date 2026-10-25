@@ -22,6 +22,7 @@ from . import completion, diffing, fixer, formatter, schema_export, statistics
 from .baseline import Baseline, BaselineError
 from .config import ConfigError, ProjectConfig, collect_manifests
 from .pack import validate_pack
+from .packindex import PackIndexError, build_index, check_index_file
 from .reporters import FORMATS, render
 from .rules import SEVERITY_ORDER, all_rules, rule_for
 from .template import TEMPLATES, starter_manifest
@@ -70,7 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     stats = subparsers.add_parser("stats", help="summarize effect and control coverage")
     stats.add_argument("path", nargs="+", help="manifest files or directories")
-    stats.add_argument("--format", choices=("text", "json", "markdown"), default="text", help="output format")
+    stats.add_argument("--format", choices=("text", "json", "markdown", "html"), default="text", help="output format")
     stats.add_argument("--output", help="write the summary to this file instead of stdout")
     _add_config_options(stats)
 
@@ -105,6 +106,37 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = subparsers.add_parser("doctor", help="check the local environment and project layout")
     doctor.add_argument("--json", action="store_true", help="print machine-readable results")
     _add_config_options(doctor)
+
+    baseline = subparsers.add_parser("baseline", help="inspect, prune or regenerate a baseline file")
+    baseline_actions = baseline.add_subparsers(dest="action", required=True)
+    baseline_show = baseline_actions.add_parser("show", help="list accepted diagnostics")
+    baseline_show.add_argument("file", help="baseline JSON file")
+    baseline_show.add_argument("--format", choices=("text", "json"), default="text", help="output format")
+    for action, description in (
+        ("prune", "drop entries that no longer match any issue"),
+        ("update", "regenerate the baseline from the current issues"),
+    ):
+        sub = baseline_actions.add_parser(action, help=description)
+        sub.add_argument("file", help="baseline JSON file")
+        sub.add_argument("--manifest", nargs="+", required=True,
+                         help="manifest files or directories used to recompute the baseline")
+        sub.add_argument("--dry-run", action="store_true", help="report what would change without writing")
+        _add_config_options(sub)
+
+    index = subparsers.add_parser("index", help="build or check a pack index")
+    index_actions = index.add_subparsers(dest="action", required=True)
+    index_build = index_actions.add_parser("build", help="generate modfx-pack.json from a directory")
+    index_build.add_argument("root", help="directory containing manifests")
+    index_build.add_argument("--pack-id", required=True, help="pack namespace")
+    index_build.add_argument("--pack-version", default="1.0.0", help="pack version label")
+    index_build.add_argument("--output", default="modfx-pack.json", help="destination file")
+    _add_config_options(index_build)
+    index_check = index_actions.add_parser("check", help="validate an existing pack index")
+    index_check.add_argument("file", help="pack index JSON file")
+    index_check.add_argument("--format", choices=FORMATS, default="text", help="output format")
+    index_check.add_argument("--output", help="write the report to this file instead of stdout")
+    _add_policy_options(index_check)
+    _add_config_options(index_check)
 
     return parser
 
@@ -162,6 +194,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "schema": _cmd_schema,
         "completion": _cmd_completion,
         "doctor": _cmd_doctor,
+        "baseline": _cmd_baseline,
+        "index": _cmd_index,
     }
     try:
         return handlers[args.command](args)
@@ -170,6 +204,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     except BaselineError as exc:
         print(f"Baseline error: {exc}", file=sys.stderr)
+        return 1
+    except PackIndexError as exc:
+        print(f"Pack index error: {exc}", file=sys.stderr)
         return 1
 
 
@@ -219,21 +256,28 @@ def _with_cli_overrides(config: ProjectConfig, args: argparse.Namespace) -> Proj
     return replace(config, **changes) if changes else config
 
 
-def _exit_code(reports: Sequence[tuple[str, ValidationReport]], fail_on: str) -> int:
-    """Map a run to a process exit code.
+def _exit_code(reports: Sequence[tuple[str, ValidationReport]], config: ProjectConfig) -> int:
+    """Map a run to a process exit code, honouring per-path failure policy.
 
     Args:
         reports: ``(path, report)`` pairs after policy has been applied.
-        fail_on: Lowest severity that fails the run.
+        config: Effective configuration, consulted per path so that an override with
+            ``fail_on: none`` really does not fail the run.
 
     Returns:
-        int: Exit code following the documented contract.
+        int: Exit code following the documented contract. Errors take precedence over
+        warning-policy failures.
     """
-    if fail_on == "none":
+    policies = [
+        (report, config.for_path(_policy_label(Path(path), config)).fail_on)
+        for path, report in reports
+    ]
+    active = [(report, fail_on) for report, fail_on in policies if fail_on != "none"]
+    if not active:
         return 0
-    if any(not report.ok for _, report in reports):
+    if any(not report.ok for report, _ in active):
         return 1
-    if fail_on == "warning" and any(report.warnings for _, report in reports):
+    if any(report.warnings for report, fail_on in active if fail_on == "warning"):
         return 2
     return 0
 
@@ -260,8 +304,30 @@ def _emit(text: str, output: str | None, quiet: bool = False) -> None:
         print(text, end="")
 
 
+def _policy_label(path: Path, config: ProjectConfig) -> str:
+    """Return the path used to match configuration overrides.
+
+    Override globs are interpreted relative to the configuration file that declared
+    them, falling back to the working directory when no file was loaded. That keeps
+    ``lint legacy/`` and ``lint /abs/path/legacy`` behave the same way.
+
+    Args:
+        path: Manifest path as supplied on the command line.
+        config: Effective configuration, used to locate the anchor directory.
+
+    Returns:
+        str: Path relative to the anchor with forward slashes when possible, otherwise
+        the path as given.
+    """
+    anchor = config.source.parent if config.source else Path.cwd()
+    try:
+        return path.resolve().relative_to(anchor.resolve()).as_posix()
+    except (ValueError, OSError):
+        return path.as_posix()
+
+
 def _validate_paths(paths: Sequence[Path], config: ProjectConfig) -> list[tuple[str, ValidationReport]]:
-    """Validate manifests and apply project policy.
+    """Validate manifests and apply project policy, including per-path overrides.
 
     Args:
         paths: Manifest paths.
@@ -270,7 +336,11 @@ def _validate_paths(paths: Sequence[Path], config: ProjectConfig) -> list[tuple[
     Returns:
         list[tuple[str, ValidationReport]]: Reports with policy applied.
     """
-    return [(str(path), config.apply(validate_file(path))) for path in paths]
+    reports: list[tuple[str, ValidationReport]] = []
+    for path in paths:
+        report = config.apply(validate_file(path), _policy_label(path, config))
+        reports.append((str(path), report))
+    return reports
 
 
 def _apply_fixes(paths: Sequence[Path], quiet: bool) -> None:
@@ -339,7 +409,7 @@ def _cmd_lint(args: argparse.Namespace) -> int:
             print(f"Baseline: {stale} entrie(s) no longer match any issue.", file=sys.stderr)
 
     _emit(render(reports, args.format, program=PROGRAM, version=__version__), args.output, args.quiet)
-    return _exit_code(reports, config.fail_on)
+    return _exit_code(reports, config)
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
@@ -429,6 +499,8 @@ def _cmd_stats(args: argparse.Namespace) -> int:
         text = json.dumps(summary.to_dict(), indent=2, ensure_ascii=False) + "\n"
     elif args.format == "markdown":
         text = summary.to_markdown()
+    elif args.format == "html":
+        text = summary.to_html(program=PROGRAM, version=__version__)
     else:
         text = summary.to_text()
     _emit(text, args.output)
@@ -472,9 +544,9 @@ def _cmd_pack(args: argparse.Namespace) -> int:
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    reports = [(path, config.apply(item)) for path, item in report.reports]
+    reports = [(path, config.apply(item, _policy_label(Path(path), config))) for path, item in report.reports]
     _emit(render(reports, args.format, program=PROGRAM, version=__version__), args.output, args.quiet)
-    return _exit_code(reports, config.fail_on)
+    return _exit_code(reports, config)
 
 
 def _cmd_rules(args: argparse.Namespace) -> int:
@@ -604,6 +676,96 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         for item in checks:
             print(f"{symbols.get(item['status'], 'INFO')} {item['check']:<10} {item['detail']}")
     return 1 if any(item["status"] == "fail" for item in checks) else 0
+
+
+def _cmd_baseline(args: argparse.Namespace) -> int:
+    """Run the ``baseline`` command.
+
+    Args:
+        args: Parsed arguments.
+
+    Returns:
+        int: Exit code.
+    """
+    if args.action == "show":
+        baseline = Baseline.load(args.file)
+        if args.format == "json":
+            print(json.dumps({
+                "file": args.file,
+                "count": len(baseline),
+                "codes": baseline.summary(),
+                "entries": [entry.to_dict() for entry in baseline.entries],
+            }, indent=2, ensure_ascii=False))
+            return 0
+        if not len(baseline):
+            print(f"{args.file}: no accepted diagnostics")
+            return 0
+        print(f"{args.file}: {len(baseline)} accepted diagnostic(s)")
+        for code, count in baseline.summary().items():
+            print(f"  {code:<44} {count}")
+        return 0
+
+    config = _with_cli_overrides(_resolve_config(args), args)
+    try:
+        paths = collect_manifests(args.manifest, config)
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    reports = _validate_paths(paths, config)
+
+    if args.action == "update":
+        baseline = Baseline.from_reports(reports)
+        if not args.dry_run:
+            baseline.save(args.file)
+        verb = "Would write" if args.dry_run else "Wrote"
+        print(f"{verb} {len(baseline)} entrie(s) to {args.file}")
+        return 0
+
+    baseline = Baseline.load(args.file)
+    kept, stale = baseline.split(reports)
+    if args.dry_run:
+        print(f"Would remove {len(stale)} stale entrie(s) from {args.file}, keeping {len(kept)}")
+    else:
+        kept.save(args.file)
+        print(f"Removed {len(stale)} stale entrie(s) from {args.file}, keeping {len(kept)}")
+    for entry in stale[:10]:
+        print(f"  stale: {entry.code} at {entry.path} in {entry.file}")
+    if len(stale) > 10:
+        print(f"  ... and {len(stale) - 10} more")
+    return 0
+
+
+def _cmd_index(args: argparse.Namespace) -> int:
+    """Run the ``index`` command.
+
+    Args:
+        args: Parsed arguments.
+
+    Returns:
+        int: Exit code.
+    """
+    config = _with_cli_overrides(_resolve_config(args), args)
+    if args.action == "build":
+        output = Path(args.output)
+        try:
+            index = build_index(
+                args.root,
+                pack_id=args.pack_id,
+                pack_version=args.pack_version,
+                config=config,
+                relative_to=output.parent if str(output.parent) else Path("."),
+            )
+        except FileNotFoundError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        path = index.save(output)
+        print(f"Wrote {len(index)} entrie(s) to {path}")
+        return 0
+
+    reports = check_index_file(args.file, config)
+    reports = [(path, config.apply(report, _policy_label(Path(path), config))) for path, report in reports]
+    _emit(render(reports, args.format, program=PROGRAM, version=__version__), args.output)
+    return _exit_code(reports, config)
 
 
 if __name__ == "__main__":

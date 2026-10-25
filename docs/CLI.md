@@ -30,6 +30,8 @@ report matters but the build must not break.
 | `stats` | Summarise effect and control coverage |
 | `diff` | Compare two manifests |
 | `pack` | Validate a directory and detect cross-file duplicates |
+| `index` | Build or check a `modfx-pack.json` index |
+| `baseline` | Inspect, prune or regenerate a baseline |
 | `rules` | List diagnostic codes |
 | `explain` | Explain one diagnostic code |
 | `schema` | Print the JSON Schema |
@@ -116,11 +118,14 @@ the validator exists to surface.
 ## `stats`
 
 ```sh
-modfx-a11y stats <path>... [--format text|json|markdown] [--output PATH]
+modfx-a11y stats <path>... [--format text|json|markdown|html] [--output PATH]
 ```
 
 Reports files, effects, mod IDs, the category distribution, how often each control is declared as
-implemented, and how many effects declare an intensity range.
+implemented, a category-by-control matrix, the effects per mod, and the effects that declare no
+control at all.
+
+`--format html` writes a standalone coverage dashboard with bar charts and no external assets.
 
 The numbers describe declarations. A 100% coverage figure means every declared effect claims the
 option, not that the option was verified in game.
@@ -159,6 +164,48 @@ perform on a single file:
 The diagnostic is attached to the second file in discovery order, so the usual report formats keep
 working. `pack examples/` in this repository intentionally reports a duplicate `mod_id`: the fixtures
 share the fictional `examplemod` namespace.
+
+---
+
+## `index`
+
+```sh
+modfx-a11y index build <directory> --pack-id <id> [--pack-version 1.0.0] [--output modfx-pack.json]
+modfx-a11y index check <file> [--format ...] [--strict] [--fail-on ...]
+```
+
+A pack index is a curated list of manifests with provenance. `build` scans a directory and writes
+`modfx-pack.json` with paths relative to the index file. `check` validates the index and every
+manifest it references:
+
+| Code | Meaning |
+| --- | --- |
+| `pack.index.invalid` | Malformed index, duplicate path, a path that escapes the pack root, or a non-HTTP source URL |
+| `pack.index.mismatch` | A referenced file is missing, or its `mod_id` / `mod_version` disagrees with the index |
+| `pack.duplicate_mod_id` | Two referenced manifests claim the same mod |
+| `pack.duplicate_effect_id` | The same effect id appears in two referenced manifests |
+
+`check` reports the index itself as the first entry, so a broken index is visible even when every
+referenced manifest is fine.
+
+---
+
+## `baseline`
+
+```sh
+modfx-a11y baseline show <file> [--format text|json]
+modfx-a11y baseline prune <file> --manifest <path>... [--dry-run]
+modfx-a11y baseline update <file> --manifest <path>... [--dry-run]
+```
+
+| Action | Effect |
+| --- | --- |
+| `show` | List accepted diagnostics grouped by code, or dump them as JSON |
+| `prune` | Drop entries that no longer match any current issue and rewrite the file |
+| `update` | Regenerate the baseline from the current issues |
+
+`prune` prints up to ten stale entries so you can see what was removed. Use `--dry-run` in CI to
+report drift without writing.
 
 ---
 

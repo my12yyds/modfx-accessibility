@@ -101,6 +101,12 @@ _RULES: tuple[Rule, ...] = (
         "mod_id must start with a lowercase letter and contain up to 64 lowercase letters, digits, '_' or '-'.",
     ),
     _rule(
+        "mod_id.reserved", SEVERITY_ERROR, "mod_id uses a reserved namespace",
+        "mod_id collides with a namespace that already belongs to the game or a loader "
+        "(for example 'minecraft', 'forge', 'fabric'). An effect id in a reserved namespace is "
+        "indistinguishable from the real one, so pick your own namespace.",
+    ),
+    _rule(
         "mod_version.type", SEVERITY_ERROR, "Invalid mod_version",
         "mod_version must be a non-blank string copied from the mod.",
     ),
@@ -212,6 +218,11 @@ _RULES: tuple[Rule, ...] = (
         "intensity_range.default", SEVERITY_ERROR, "intensity_range default is outside bounds",
         "default must lie between minimum and maximum inclusive.",
     ),
+    _rule(
+        "intensity_range.degenerate", SEVERITY_WARNING, "intensity_range has no span",
+        "minimum equals maximum, so the intensity control cannot actually change anything. "
+        "Either widen the range or declare controls.intensity as false.",
+    ),
     # --- Pack level ----------------------------------------------------------
     _rule(
         "pack.duplicate_mod_id", SEVERITY_ERROR, "Duplicate mod_id across manifests",
@@ -221,6 +232,18 @@ _RULES: tuple[Rule, ...] = (
     _rule(
         "pack.duplicate_effect_id", SEVERITY_ERROR, "Duplicate effect id across manifests",
         "The same effect id appears in more than one manifest of the pack.",
+        group="pack",
+    ),
+    _rule(
+        "pack.index.invalid", SEVERITY_ERROR, "Invalid pack index",
+        "The pack index is malformed: missing fields, wrong types, duplicate paths, an unsafe "
+        "path outside the pack root, or an unsupported source URL scheme.",
+        group="pack",
+    ),
+    _rule(
+        "pack.index.mismatch", SEVERITY_ERROR, "Pack index disagrees with the manifest",
+        "The index declares a mod_id or mod_version that does not match the manifest it points at, "
+        "or the referenced file is missing.",
         group="pack",
     ),
     # --- Configuration -------------------------------------------------------

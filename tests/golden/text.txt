@@ -1,0 +1,6 @@
+clean.modfx.json: valid (no warnings)
+warn.modfx.json: structurally valid with 1 warning(s)
+WARNING $.effects [effects.empty] No effects.
+broken.modfx.json: invalid with 1 error(s) and 1 warning(s) [1 suppressed]
+ERROR   $.effects[0].controls.disable [control.required] Declare 'disable'.
+WARNING $.effects[0].controls [controls.no_suggested_option] Consider an option.
